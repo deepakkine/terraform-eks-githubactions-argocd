@@ -4,7 +4,7 @@ resource "aws_vpc" "main" {
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
-    Name = var.vpc_name
+    Name        = var.vpc_name
     Environment = var.environment
   }
 }
@@ -14,11 +14,14 @@ resource "aws_subnet" "public" {
   count                   = length(var.public_subnet_cidrs)
   vpc_id                  = aws_vpc.main.id
   cidr_block              = var.public_subnet_cidrs[count.index]
-  map_public_ip_on_launch = true
+  map_public_ip_on_launch = true # Automatically assign public IPs to instances in this subnet
   availability_zone       = element(var.availability_zones, count.index)
   tags = {
-    Name = "${var.vpc_name}-public-${count.index + 1}"
+    Name        = "${var.vpc_name}-public-${count.index + 1}"
     Environment = var.environment
+
+    "kubernetes.io/role/elb"               = "1"      # Tag for public subnets to allow ELB to use them
+    "kubernetes.io/cluster/skillpulse-eks" = "shared" # Tag to allow EKS to use these subnets for cluster resources
   }
 }
 
@@ -29,8 +32,11 @@ resource "aws_subnet" "private" {
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = element(var.availability_zones, count.index)
   tags = {
-    Name = "${var.vpc_name}-private-${count.index + 1}"
+    Name        = "${var.vpc_name}-private-${count.index + 1}"
     Environment = var.environment
+
+    "kubernetes.io/role/internal-elb"      = "1"      # Tag for private subnets to allow internal ELB to use them
+    "kubernetes.io/cluster/skillpulse-eks" = "shared" # Tag to allow EKS to use these subnets for cluster resources
   }
 }
 
@@ -38,7 +44,7 @@ resource "aws_subnet" "private" {
 resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name = "${var.vpc_name}-igw"
+    Name        = "${var.vpc_name}-igw"
     Environment = var.environment
   }
 }
@@ -47,7 +53,7 @@ resource "aws_internet_gateway" "igw" {
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name = "${var.vpc_name}-public-rt"
+    Name        = "${var.vpc_name}-public-rt"
     Environment = var.environment
   }
 }
@@ -57,7 +63,7 @@ resource "aws_route_table_association" "public" {
   count          = length(var.public_subnet_cidrs)
   subnet_id      = aws_subnet.public[count.index].id
   route_table_id = aws_route_table.public.id
-  
+
 }
 
 # Default Route to Internet Gateway for Public Subnets
@@ -75,9 +81,9 @@ resource "aws_eip" "nat" {
 # Create NAT Gateway in the first public subnet
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id  # Place the NAT gateway in the first public subnet
+  subnet_id     = aws_subnet.public[0].id # Place the NAT gateway in the first public subnet
   tags = {
-    Name = "${var.vpc_name}-nat-gateway"
+    Name        = "${var.vpc_name}-nat-gateway"
     Environment = var.environment
   }
 }
@@ -86,7 +92,7 @@ resource "aws_nat_gateway" "main" {
 resource "aws_route_table" "private" {
   vpc_id = aws_vpc.main.id
   tags = {
-    Name = "${var.vpc_name}-private-rt"
+    Name        = "${var.vpc_name}-private-rt"
     Environment = var.environment
   }
 }
@@ -96,7 +102,7 @@ resource "aws_route" "default_private" {
   route_table_id         = aws_route_table.private.id
   destination_cidr_block = "0.0.0.0/0"
   nat_gateway_id         = aws_nat_gateway.main.id
-  
+
 }
 
 # Associate private subnets with the private route table
@@ -104,5 +110,5 @@ resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_cidrs)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
-  
+
 }

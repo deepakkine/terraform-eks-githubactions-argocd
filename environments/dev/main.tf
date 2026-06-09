@@ -1,22 +1,10 @@
-module "ec2" {
-  source = "../../modules/ec2"
+module "ecr" {
+  source = "../../modules/ecr"
 
-  instances = {
-    "dev-instance-1" = {
-      ami_id        = "ami-0dee22c13ea7a9a67"
-      instance_type = "t3.micro"
-      name          = "dev-instance-1"
-      subnet_id     = module.vpc.public_subnet_ids[0]
-    },
-    "dev-instance-2" = {
-      ami_id        = "ami-0dee22c13ea7a9a67"
-      instance_type = "t3.micro"
-      name          = "dev-instance-2"
-      subnet_id     = module.vpc.public_subnet_ids[1]
-    }
+  repositories = {
+    backend  = "skillpulse-backend"
+    frontend = "skillpulse-frontend"
   }
-
-  environment = "dev"
 }
 
 module "s3" {
@@ -36,6 +24,18 @@ module "vpc" {
   public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
   private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
   availability_zones   = ["ap-south-1a", "ap-south-1b"]
+
+  environment = "dev"
+}
+
+module "eks" {
+  source = "../../modules/eks"
+
+  cluster_name    = "skillpulse-dev-eks"
+  cluster_version = "1.33"
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnet_ids
 
   environment = "dev"
 }
