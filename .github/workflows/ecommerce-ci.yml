@@ -12,6 +12,7 @@ permissions:
 env:
   AWS_REGION: ap-south-1
   ECR_REPOSITORY: ecommerce-app
+  IMAGE_TAG: v${{ github.run_number }}
 
 jobs:
   build-and-deploy:
@@ -31,9 +32,6 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Set Image Tag
-        run: echo "IMAGE_TAG=${GITHUB_SHA::7}" >> $GITHUB_ENV
-
       - name: Build Docker Image
         run: |
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG ./ecommerce-ci4
@@ -49,13 +47,14 @@ jobs:
 
       - name: Update Kubernetes Manifest
         run: |
-          sed -i "s|image: .*|image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG|g" kubernetes/app/deployment.yaml
-
+            sed -i "s|image: .*|image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/$ECR_REPOSITORY:$IMAGE_TAG|g" kubernetes/app/deployment.yaml
       - name: Commit Manifest Changes
         run: |
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
+            git config --global user.name "github-actions"
+            git config --global user.email "github-actions@github.com"
 
-          git add kubernetes/app/deployment.yaml
-          git commit -m "ci: update image tag to $IMAGE_TAG" || exit 0
-          git push
+            git add kubernetes/app/deployment.yaml
+
+            git commit -m "ci: update image tag to $IMAGE_TAG" || exit 0
+
+            git push origin main
