@@ -2,8 +2,7 @@ module "ecr" {
   source = "../../modules/ecr"
 
   repositories = {
-    backend  = "skillpulse-backend"
-    frontend = "skillpulse-frontend"
+    app = "ecommerce-app"
   }
 }
 
