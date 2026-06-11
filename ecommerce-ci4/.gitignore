@@ -130,3 +130,8 @@ db_backup/*.sql
 
 public/uploads/*
 !public/uploads/index.html
+
+vendor/
+writable/logs/*
+writable/session/*
+writable/debugbar/*
