@@ -24,6 +24,10 @@ spec:
 
         imagePullPolicy: Always
 
+        envFrom:
+        - configMapRef:
+            name: ecommerce-config
+
         resources:
           requests:
             cpu: "100m"
