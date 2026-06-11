@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-import
+  namespace: ecommerce
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+
+      containers:
+      - name: mysql-import
+
+        image: mysql:8.0
+
+        command:
+        - /bin/sh
+        - -c
+
+        args:
+        - |
+          mysql \
+          -h mysql \
+          -uroot \
+          -proot \
+          ecommerce < /sql/ecommerce.sql
+
+        volumeMounts:
+        - name: sql-backup
+          mountPath: /sql
+
+      volumes:
+      - name: sql-backup
+        configMap:
+          name: ecommerce-sql
