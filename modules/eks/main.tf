@@ -5,6 +5,8 @@ module "eks" {
   cluster_name    = var.cluster_name
   cluster_version = var.cluster_version
 
+  enable_irsa = true
+
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
@@ -18,7 +20,9 @@ module "eks" {
     kube-proxy = {}
     vpc-cni = {}
 
-    aws-ebs-csi-driver = {}
+    aws-ebs-csi-driver = {
+      service_account_role_arn = module.ebs_csi_irsa_role.iam_role_arn
+    }
   }
 
   eks_managed_node_groups = {
