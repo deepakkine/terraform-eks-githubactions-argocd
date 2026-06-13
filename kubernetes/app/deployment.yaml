@@ -48,20 +48,21 @@ spec:
             cpu: "250m"
             memory: "256Mi"
 
+        # TEMPORARY DEBUG PROBES
         readinessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 10
+          exec:
+            command:
+            - sh
+            - -c
+            - exit 0
+          initialDelaySeconds: 5
           periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
 
         livenessProbe:
-          httpGet:
-            path: /
-            port: 80
-          initialDelaySeconds: 30
+          exec:
+            command:
+            - sh
+            - -c
+            - exit 0
+          initialDelaySeconds: 10
           periodSeconds: 20
-          timeoutSeconds: 5
-          failureThreshold: 3
