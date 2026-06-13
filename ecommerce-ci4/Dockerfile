@@ -1,14 +1,4 @@
-FROM php:8.2-apache AS builder
-
-RUN apt-get update && apt-get install -y \
-    git \
-    unzip \
-    zip \
-    curl \
-    libicu-dev \
-    && docker-php-ext-install intl
-
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+FROM composer:2 AS builder
 
 WORKDIR /app
 
@@ -18,7 +8,8 @@ RUN composer install \
     --no-dev \
     --prefer-dist \
     --optimize-autoloader \
-    --no-interaction
+    --no-interaction \
+    --ignore-platform-req=ext-intl
 
 COPY . .
 
@@ -26,7 +17,10 @@ FROM php:8.2-apache
 
 RUN apt-get update && apt-get install -y \
     libicu-dev \
-    && docker-php-ext-install intl \
+    unzip \
+    zip \
+    curl \
+    && docker-php-ext-install intl mysqli pdo_mysql \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -39,8 +33,7 @@ COPY --from=builder /app /var/www/html
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' \
     /etc/apache2/sites-available/000-default.conf
 
-RUN chown -R www-data:www-data \
-    /var/www/html/writable
+RUN chown -R www-data:www-data /var/www/html/writable
 
 EXPOSE 80
 
