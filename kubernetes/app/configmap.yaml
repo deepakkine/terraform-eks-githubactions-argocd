@@ -8,3 +8,5 @@ data:
   DB_HOST: mysql
   DB_NAME: ecommerce
   DB_USER: root
+  DB_PASSWORD: root
+  CI_ENVIRONMENT: development
