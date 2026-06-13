@@ -1,635 +1,796 @@
-# Cloud-Native DevOps Platform on AWS EKS using Terraform, GitHub Actions and ArgoCD
+# 🚀 End-to-End DevOps Project: AWS EKS + GitHub Actions + ArgoCD + Terraform
 
-This project provisions AWS infrastructure using Terraform and deploys it through GitHub Actions. It was originally based on a Jenkins flow and has now been migrated to a GitHub Actions CI/CD pipeline.
+## 📖 Overview
 
-The final setup uses:
+This project demonstrates a complete cloud-native DevOps implementation using Terraform, Amazon EKS, GitHub Actions, Amazon ECR, ArgoCD, Docker, and Kubernetes.
 
-- Terraform for Infrastructure as Code
-- GitHub Actions for CI/CD
-- AWS OIDC authentication for secure GitHub-to-AWS access
-- S3 remote backend for Terraform state
-- S3 lockfile for Terraform state locking
-- Separate `dev` and `prod` Terraform environment folders
-- Manual destroy workflow for safe cleanup
+The objective was to automate infrastructure provisioning, container image management, CI/CD pipelines, security scanning, and GitOps-based application deployment for a CodeIgniter E-Commerce application.
 
-## Architecture
+---
 
-![AWS Terraform architecture](docs/images/architecture.svg)
-
-## GitHub Actions Flow
-
-![GitHub Actions CI/CD flow](docs/images/github-actions-flow.svg)
-
-## Project Structure
+## 🏗️ Architecture
 
 ```text
-aws-infra-terraform-github-actions/
-├── .github/
-│   └── workflows/
-│       ├── terraform.yml
-│       └── terraform-destroy.yml
-├── docs/
-│   └── images/
-│       ├── architecture.svg
-│       └── github-actions-flow.svg
-├── environments/
-│   ├── dev/
-│   │   ├── backend.tf
-│   │   ├── main.tf
-│   │   └── provider.tf
-│   └── prod/
-│       ├── backend.tf
-│       ├── main.tf
-│       └── provider.tf
-├── modules/
-│   ├── ec2/
-│   ├── s3/
-│   └── vpc/
-├── .gitattributes
+Developer
+    │
+    ▼
+GitHub Repository
+    │
+    ▼
+GitHub Actions CI Pipeline
+    │
+    ├── Build Docker Image
+    ├── Trivy Security Scan
+    └── Push Image to Amazon ECR
+    │
+    ▼
+GitHub Repository Manifest Update
+    │
+    ▼
+ArgoCD GitOps Synchronization
+    │
+    ▼
+Amazon EKS Cluster
+    │
+    ├── Ecommerce Application
+    ├── MySQL Database
+    ├── Persistent Volume Claim
+    └── Horizontal Pod Autoscaler
+```
+
+---
+
+# 🛠️ Tech Stack
+
+## Cloud
+
+* AWS EKS
+* AWS ECR
+* AWS IAM
+* AWS VPC
+
+## Infrastructure as Code
+
+* Terraform
+
+## Containerization
+
+* Docker
+
+## CI/CD
+
+* GitHub Actions
+* ArgoCD
+
+## Security
+
+* Trivy
+
+## Orchestration
+
+* Kubernetes
+
+## Application
+
+* PHP
+* Apache
+* CodeIgniter 4
+* MySQL
+
+---
+
+# ✨ Features
+
+* Infrastructure provisioning using Terraform
+* Kubernetes deployment on Amazon EKS
+* Docker image build and versioning
+* GitHub Actions CI/CD pipeline
+* Trivy container vulnerability scanning
+* Amazon ECR image registry
+* GitOps deployment with ArgoCD
+* Horizontal Pod Autoscaler
+* ConfigMaps and Secrets
+* Persistent Storage
+* Rolling Updates
+* Health Probes
+* Automated image tag updates
+
+---
+
+# 📂 Repository Structure
+
+```text
+.
+├── README.md
+├── argocd
+│   └── ecommerce-app.yaml
+│
+├── assets
+│   ├── 01-kubernetes-nodes.png
+│   ├── 02-kubernetes-pods.png
+│   ├── 03-horizontal-pod-autoscaler.png
+│   ├── 04-persistent-volume-claim.png
+│   ├── 05-argocd-application-status-cli.png
+│   ├── 06-argocd-dashboard.png
+│   ├── 07-amazon-ecr-images.png
+│   ├── 08-amazon-eks-cluster-overview.png
+│   ├── 09-amazon-eks-worker-nodes.png
+│   ├── 10-github-actions-workflow.png
+│   ├── 11-ecommerce-application-homepage.png
+│   └── 12-github-actions-security-scan.png
+│
+├── docs
+│   └── images
+│
+├── ecommerce-ci4
+│   ├── app
+│   ├── public
+│   ├── db_backup
+│   │   └── ecommerce.sql
+│   ├── Dockerfile
+│   └── composer.json
+│
+├── environments
+│   ├── dev
+│   └── prod
+│
+├── kubernetes
+│   ├── namespace
+│   ├── mysql
+│   ├── app
+│   ├── jobs
+│   ├── ingress
+│   └── kustomization.yaml
+│
+├── modules
+│   ├── vpc
+│   ├── eks
+│   ├── ecr
+│   └── s3
+│
 ├── provider.tf
-└── README.md
+├── terraform.yml.backup
+└── terraform-destroy.yml.backup
+```
+---
+## CI/CD Workflow Diagram
+
+![GitHub Actions Workflow](./docs/images/github-actions-flow.svg)
+---
+
+# 🚀 Deployment Guide
+
+## Prerequisites
+
+Install:
+
+* AWS CLI
+* Terraform
+* kubectl
+* Docker
+* Git
+
+Verify:
+
+```bash
+aws --version
+terraform version
+kubectl version --client
+docker --version
 ```
 
-## Infrastructure Created
+---
 
-Each environment creates:
+## Clone Repository
 
-- 1 VPC
-- 2 public subnets
-- 2 private subnets
-- Internet Gateway
-- NAT Gateway
-- Route tables and route table associations
-- 2 EC2 instances
-- 1 application S3 bucket
+```bash
+git clone https://github.com/YOUR_USERNAME/terraform-eks-githubactions-argocd.git
 
-Current application bucket names:
+cd terraform-eks-githubactions-argocd
+```
+
+---
+
+## Configure AWS Credentials
+
+```bash
+aws configure
+```
+
+Provide:
 
 ```text
-dev  -> dev-app-data-848504403730
-prod -> prod-app-data-848504403730
+AWS Access Key
+AWS Secret Key
+Region: ap-south-1
 ```
 
-Terraform backend bucket:
+---
 
-```text
-aws-terraform-state-file-2026-848504403730
-```
+## Deploy Infrastructure (Development)
 
-## Branch Strategy
+```bash
+cd environments/dev
 
-This project uses two main branches:
-
-```text
-dev  -> development changes
-main -> production deployment
-```
-
-Workflow behavior:
-
-```text
-Push to dev          -> workflow does not run
-PR from dev to main  -> CI runs only
-Merge PR to main     -> CD runs and applies prod
-Manual run           -> choose dev or prod
-Manual destroy       -> choose dev or prod and type destroy
-```
-
-## AWS Prerequisites
-
-Before running GitHub Actions, create the Terraform backend S3 bucket manually.
-
-### 1. Create Backend S3 Bucket
-
-Create this bucket in AWS S3:
-
-```text
-aws-terraform-state-file-2026-848504403730
-```
-
-Use these settings:
-
-```text
-Region: ap-south-1 / Asia Pacific (Mumbai)
-Block all public access: ON
-Bucket versioning: Enable
-Default encryption: SSE-S3
-```
-
-Do not make the Terraform state bucket public.
-
-### 2. Create GitHub OIDC Provider
-
-In AWS IAM:
-
-```text
-IAM -> Identity providers -> Add provider
-```
-
-Use:
-
-```text
-Provider type: OpenID Connect
-Provider URL: https://token.actions.githubusercontent.com
-Audience: sts.amazonaws.com
-```
-
-### 3. Create IAM Role For GitHub Actions
-
-Create an IAM role that GitHub Actions can assume using OIDC.
-
-Example trust policy:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Federated": "arn:aws:iam::848504403730:oidc-provider/token.actions.githubusercontent.com"
-      },
-      "Action": "sts:AssumeRoleWithWebIdentity",
-      "Condition": {
-        "StringEquals": {
-          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-        },
-        "StringLike": {
-          "token.actions.githubusercontent.com:sub": "repo:YOUR_GITHUB_USERNAME/aws-infra-terraform-github-actions:*"
-        }
-      }
-    }
-  ]
-}
-```
-
-For learning or lab usage, `AdministratorAccess` can be attached to this role. For production usage, restrict the role to only the required services.
-
-### 4. Add GitHub Secret
-
-In GitHub:
-
-```text
-Repository -> Settings -> Secrets and variables -> Actions -> New repository secret
-```
-
-Add:
-
-```text
-Name: AWS_ROLE_ARN
-Value: arn:aws:iam::848504403730:role/YOUR_GITHUB_ACTIONS_ROLE_NAME
-```
-
-## Terraform Backend
-
-Both environments use an S3 backend.
-
-Dev:
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket       = "aws-terraform-state-file-2026-848504403730"
-    key          = "dev/terraform.tfstate"
-    region       = "ap-south-1"
-    use_lockfile = true
-    encrypt      = true
-  }
-}
-```
-
-Prod:
-
-```hcl
-terraform {
-  backend "s3" {
-    bucket       = "aws-terraform-state-file-2026-848504403730"
-    key          = "prod/terraform.tfstate"
-    region       = "ap-south-1"
-    use_lockfile = true
-    encrypt      = true
-  }
-}
-```
-
-The backend uses `use_lockfile = true`, so Terraform creates a lock file in S3 while a run is active.
-
-## CI/CD Workflow
-
-The main deployment workflow is:
-
-```text
-.github/workflows/terraform.yml
-```
-
-It runs on:
-
-```yaml
-pull_request:
-  branches:
-    - main
-
-push:
-  branches:
-    - main
-
-workflow_dispatch:
-```
-
-### PR From Dev To Main
-
-When a pull request is raised from `dev` to `main`, the workflow runs CI:
-
-```text
 terraform init
-terraform fmt -check -recursive
-terraform validate
-terraform plan -out=tfplan
+terraform plan
+terraform apply -auto-approve
 ```
 
-It does not run `terraform apply` on pull requests.
+## Deploy Infrastructure (Production)
 
-### Merge To Main
+```bash
+cd environments/prod
 
-When the PR is merged into `main`, GitHub creates a push to `main`. That runs CD:
-
-```text
 terraform init
-terraform fmt -check -recursive
-terraform validate
-terraform plan -out=tfplan
-terraform apply -auto-approve tfplan
+terraform plan
+terraform apply -auto-approve
 ```
+## Architecture Diagram
 
-### Manual Deployment
+![Architecture](./docs/images/architecture.svg)
 
-The workflow also supports manual runs through `workflow_dispatch`.
+Resources created:
 
-From GitHub:
+* VPC
+* Subnets
+* Security Groups
+* EKS Cluster
+* Worker Nodes
+* IAM Roles
 
-```text
-Actions -> Terraform CI/CD -> Run workflow
-```
+---
 
-Choose:
-
-```text
-environment: dev
-```
-
-or:
-
-```text
-environment: prod
-```
-
-Manual deployment runs `apply`, so use it carefully.
-
-## Destroy Workflow
-
-The destroy workflow is:
-
-```text
-.github/workflows/terraform-destroy.yml
-```
-
-It is manual only.
-
-From GitHub:
-
-```text
-Actions -> Terraform Destroy -> Run workflow
-```
-
-Choose:
-
-```text
-environment: prod
-confirm_destroy: destroy
-```
-
-or:
-
-```text
-environment: dev
-confirm_destroy: destroy
-```
-
-The workflow runs:
-
-```text
-terraform init
-terraform validate
-terraform plan -destroy -out=tfdestroy
-terraform apply -auto-approve tfdestroy
-```
-
-Important: do not delete the Terraform backend S3 bucket before destroy. Terraform needs the state file to know which resources to remove.
-
-## Step By Step Deployment
-
-### 1. Work On Dev Branch
+## Configure kubectl
 
 ```bash
-git checkout dev
+aws eks update-kubeconfig \
+--region ap-south-1 \
+--name ecommerce-eks
 ```
 
-Make Terraform changes.
-
-### 2. Commit And Push Dev
+Verify:
 
 ```bash
-git status
-git add .
-git commit -m "Update Terraform infrastructure"
-git push origin dev
+kubectl get nodes
 ```
 
-Pushing to `dev` does not run the workflow.
+---
 
-### 3. Raise PR
-
-In GitHub:
-
-```text
-Pull requests -> New pull request
-base: main
-compare: dev
-Create pull request
-```
-
-This runs CI only.
-
-### 4. Merge PR
-
-After CI passes:
-
-```text
-Merge pull request
-```
-
-This triggers CD on `main` and runs Terraform apply for prod.
-
-## Step By Step Destroy
-
-### 1. Open Actions
-
-```text
-GitHub repo -> Actions
-```
-
-### 2. Select Destroy Workflow
-
-```text
-Terraform Destroy
-```
-
-### 3. Run Workflow
-
-Click:
-
-```text
-Run workflow
-```
-
-Enter:
-
-```text
-environment: prod
-confirm_destroy: destroy
-```
-
-### 4. Verify AWS
-
-After the workflow completes, check:
-
-```text
-EC2 -> Instances
-VPC -> VPCs
-S3 -> Buckets
-```
-
-The Terraform-managed resources should be removed.
-
-## Troubleshooting
-
-### 1. S3 Backend Bucket Create Error
-
-Error:
-
-```text
-Failed to create bucket
-A conflicting conditional operation is currently in progress against this resource
-```
-
-Cause:
-
-```text
-AWS is still processing a bucket create/delete request, or the same bucket name was tried multiple times.
-```
-
-Fix:
-
-```text
-Wait 2-5 minutes and try again.
-Use a more unique bucket name if needed.
-```
-
-Final backend bucket used:
-
-```text
-aws-terraform-state-file-2026-848504403730
-```
-
-### 2. S3 Backend Region Error
-
-Error:
-
-```text
-HTTP 301 redirect while accessing S3 backend bucket
-```
-
-Cause:
-
-```text
-The bucket exists in a different region than backend.tf.
-```
-
-Fix:
-
-```text
-Create the backend bucket in ap-south-1, or change backend.tf to the bucket's actual region.
-```
-
-### 3. Deprecated DynamoDB Locking Warning
-
-Warning:
-
-```text
-dynamodb_table is deprecated
-```
-
-Fix:
-
-Use:
-
-```hcl
-use_lockfile = true
-```
-
-instead of:
-
-```hcl
-dynamodb_table = "terraform-locks"
-```
-
-### 4. Terraform Format Check Failed
-
-Error:
-
-```text
-Terraform exited with code 3
-backend.tf
-main.tf
-```
-
-Cause:
-
-```text
-Terraform files were not formatted according to terraform fmt.
-```
-
-Fix:
-
-Run locally if Terraform is installed:
+## Install ArgoCD
 
 ```bash
-terraform fmt -recursive
+kubectl create namespace argocd
+
+kubectl apply \
+-n argocd \
+-f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 ```
 
-Or fix formatting manually. The project also includes `.gitattributes`:
-
-```text
-*.tf text eol=lf
-*.tfvars text eol=lf
-*.yml text eol=lf
-*.yaml text eol=lf
-```
-
-This helps prevent Windows line ending issues in GitHub Actions.
-
-### 5. S3 Application Bucket Already Exists
-
-Error:
-
-```text
-BucketAlreadyExists: The requested bucket name is not available.
-```
-
-Cause:
-
-```text
-S3 bucket names are globally unique across all AWS accounts.
-```
-
-Fix:
-
-Use a unique name, usually with your AWS account id.
-
-Current bucket names:
-
-```text
-dev-app-data-848504403730
-prod-app-data-848504403730
-```
-
-### 6. Push To Dev Does Not Run Workflow
-
-This is expected.
-
-The workflow was intentionally configured so:
-
-```text
-Push to dev -> no workflow
-PR to main  -> CI
-Push main   -> CD
-```
-
-### 7. Terraform Apply Created Some Resources But Failed Later
-
-Cause:
-
-```text
-Terraform may create VPC, EC2, or NAT Gateway resources before failing on another resource such as S3.
-```
-
-Fix:
-
-After fixing the error, run the workflow again. Terraform reads state and continues from the existing resources instead of recreating everything.
-
-If cleanup is needed, use the manual destroy workflow.
-
-### 8. GitHub Actions Cannot Access AWS
-
-Possible causes:
-
-```text
-AWS_ROLE_ARN secret is missing or wrong.
-OIDC provider is not created.
-IAM role trust policy does not match the GitHub repo.
-IAM role does not have enough permissions.
-```
-
-Fix:
-
-Check:
-
-```text
-GitHub repo -> Settings -> Secrets and variables -> Actions -> AWS_ROLE_ARN
-AWS IAM -> Identity providers
-AWS IAM -> Roles -> Trust relationships
-```
-
-## Useful Commands
-
-Check branch:
+Verify:
 
 ```bash
-git branch
+kubectl get pods -n argocd
 ```
 
-Check local branch tracking:
+---
+
+## Create Amazon ECR Repository
 
 ```bash
-git branch -vv
+aws ecr create-repository \
+--repository-name ecommerce-app
 ```
 
-Check remote:
+---
+
+## Configure GitHub Secrets
+
+Add the following repository secrets:
+
+```text
+AWS_REGION
+ECR_REPOSITORY
+AWS_ROLE_ARN
+```
+
+---
+
+## Trigger CI/CD Pipeline
 
 ```bash
-git remote -v
+git push origin main
 ```
 
-Commit changes:
+Pipeline stages:
+
+1. Checkout Code
+2. Build Docker Image
+3. Run Trivy Scan
+4. Push Image to Amazon ECR
+5. Update Kubernetes Manifest
+6. Commit Updated Image Tag
+7. ArgoCD Sync
+
+---
+
+## Verify Deployment
 
 ```bash
-git add .
-git commit -m "Update project"
-git push origin dev
+kubectl get nodes
+
+kubectl get pods -A
+
+kubectl get deployment -n ecommerce
+
+kubectl get svc -n ecommerce
+
+kubectl get hpa -n ecommerce
+
+kubectl get pvc -n ecommerce
 ```
 
-Create dev branch if needed:
+---
+
+## Access Application
 
 ```bash
-git checkout -b dev
-git push -u origin dev
+kubectl port-forward \
+-n ecommerce \
+svc/ecommerce-app \
+8080:80
 ```
 
-## Important Notes
+Open:
 
-- Do not store AWS access keys in GitHub secrets for this project. Use OIDC and `AWS_ROLE_ARN`.
-- Do not make the Terraform state bucket public.
-- Do not delete the backend S3 bucket before destroy.
-- `terraform destroy` is manual only for safety.
-- Pushes to `dev` are intentionally quiet.
-- Production apply happens only after merge to `main` or manual workflow dispatch.
+```text
+http://localhost:8080
+```
+# 🗄️ Database Initialization
+
+The application requires a MySQL database.
+
+A database dump is available:
+
+```text
+ecommerce-ci4/db_backup/ecommerce.sql
+```
+
+Import the schema:
+
+```bash
+kubectl apply -f kubernetes/jobs/mysql-import-job.yaml
+```
+
+Verify:
+
+```bash
+kubectl exec -it -n ecommerce <mysql-pod> -- bash
+
+mysql -u root -proot
+
+SHOW DATABASES;
+USE ecommerce;
+SHOW TABLES;
+```
+# ✅ Verification & Operations Commands
+
+## Check EKS Nodes
+
+```bash
+kubectl get nodes
+```
+
+## Check Application Pods
+
+```bash
+kubectl get pods -n ecommerce
+```
+
+## Watch Pod Status
+
+```bash
+kubectl get pods -n ecommerce -w
+```
+
+## Check Deployments
+
+```bash
+kubectl get deployment -n ecommerce
+```
+
+## Check Services
+
+```bash
+kubectl get svc -n ecommerce
+```
+
+## Check Persistent Volume Claims
+
+```bash
+kubectl get pvc -n ecommerce
+```
+
+## Check Horizontal Pod Autoscaler
+
+```bash
+kubectl get hpa -n ecommerce
+```
+
+## Check ArgoCD Application Status
+
+```bash
+kubectl get application -n argocd
+```
+
+## Check Application Logs
+
+```bash
+kubectl logs -f deployment/ecommerce-app -n ecommerce
+```
+
+## Check MySQL Logs
+
+```bash
+kubectl logs -f deployment/mysql -n ecommerce
+```
+
+## Verify Current Image Version
+
+```bash
+kubectl get deployment ecommerce-app \
+-n ecommerce \
+-o=jsonpath='{.spec.template.spec.containers[0].image}'
+```
+
+## Check Images in Amazon ECR
+
+```bash
+aws ecr describe-images \
+--repository-name ecommerce-app \
+--region ap-south-1
+```
+
+## Check Rollout Status
+
+```bash
+kubectl rollout status deployment/ecommerce-app -n ecommerce
+```
+
+## Access Application Locally
+
+```bash
+kubectl port-forward \
+svc/ecommerce-app \
+8080:80 \
+-n ecommerce
+```
+
+Application URL:
+
+```text
+http://localhost:8080
+```
+---
+# 📸 Project Screenshots
+
+## 1. Amazon EKS Cluster Overview
+
+![Amazon EKS](./assets/08-amazon-eks-cluster-overview.png)
+
+---
+
+## 2. Amazon EKS Worker Nodes
+
+![Amazon EKS Worker Nodes](./assets/09-amazon-eks-worker-nodes.png)
+
+---
+
+## 3. Kubernetes Nodes
+
+![Kubernetes Nodes](./assets/01-kubernetes-nodes.png)
+
+---
+
+## 4. GitHub Actions Workflow
+
+![GitHub Actions](./assets/10-github-actions-workflow.png)
+
+---
+
+## 5. Trivy Security Scan
+
+![Trivy Security Scan](./assets/12-github-actions-security-scan.png)
+
+---
+
+## 6. Amazon ECR Images
+
+![Amazon ECR](./assets/07-amazon-ecr-images.png)
+
+---
+
+## 7. ArgoCD Application Status (CLI)
+
+![ArgoCD CLI](./assets/05-argocd-application-status-cli.png)
+
+---
+
+## 8. ArgoCD Dashboard
+
+![ArgoCD Dashboard](./assets/06-argocd-dashboard.png)
+
+---
+
+## 9. Kubernetes Pods
+
+![Kubernetes Pods](./assets/02-kubernetes-pods.png)
+
+---
+
+## 10. Persistent Volume Claim
+
+![Persistent Volume Claim](./assets/04-persistent-volume-claim.png)
+
+---
+
+## 11. Horizontal Pod Autoscaler
+
+![Horizontal Pod Autoscaler](./assets/03-horizontal-pod-autoscaler.png)
+
+---
+
+## 12. E-Commerce Application Homepage
+
+![E-Commerce Application](./assets/11-ecommerce-application-homepage.png)
+---
+
+# 🔧 Troubleshooting & Challenges Faced
+
+## Issue 1 – CrashLoopBackOff
+
+### Problem
+
+Application pods repeatedly restarted.
+
+### Root Cause
+
+Apache DocumentRoot was incorrectly configured.
+
+### Fix
+
+Changed:
+
+```text
+/var/www/html
+```
+
+to:
+
+```text
+/var/www/html/public
+```
+
+---
+
+## Issue 2 – Missing CodeIgniter Dependencies
+
+### Problem
+
+Application returned:
+
+```text
+vendor/autoload.php not found
+```
+
+### Fix
+
+Implemented multi-stage Docker build and ensured Composer dependencies were copied into the runtime image.
+
+---
+
+## Issue 3 – Missing PHP Extensions
+
+### Error
+
+```text
+codeigniter4/framework requires ext-intl
+```
+
+### Fix
+
+Installed:
+
+```bash
+docker-php-ext-install intl
+```
+
+---
+
+## Issue 4 – MySQL Driver Missing
+
+### Fix
+
+Added:
+
+```bash
+docker-php-ext-install mysqli pdo pdo_mysql
+```
+
+---
+
+## Issue 5 – Database Configuration Error
+
+### Error
+
+```text
+Constant expression contains invalid operations
+```
+
+### Root Cause
+
+Environment variables were loaded incorrectly inside property declarations.
+
+### Fix
+
+Moved environment variable assignment into the constructor.
+
+---
+
+## Issue 6 – Git Push Rejected
+
+### Error
+
+```text
+non-fast-forward
+```
+
+### Fix
+
+```bash
+git pull --rebase origin main
+
+git push origin main
+```
+
+---
+
+## Issue 7 – ArgoCD Synced but Application Not Updated
+
+### Fix
+
+Verified:
+
+```bash
+kubectl get deployment -n ecommerce
+
+kubectl get application -n argocd
+```
+
+Confirmed image tag updates and rollout status.
+
+---
+
+# ⚠ Known Limitations
+
+- Application currently uses NodePort-based access.
+- HTTPS and AWS Application Load Balancer integration are not configured.
+- Monitoring stack (Prometheus/Grafana) is not deployed.
+- Centralized logging is not configured.
+- AWS Secrets Manager integration is not implemented.
+- Backup and disaster recovery automation is not implemented.
+- This project is intended as a learning and portfolio implementation and is not production hardened.
+---
+# 🏆 Project Achievements
+
+✔ Provisioned AWS infrastructure using Terraform modules
+
+✔ Created Amazon EKS cluster with managed worker nodes
+
+✔ Configured Amazon ECR as a private container registry
+
+✔ Containerized a CodeIgniter 4 eCommerce application using Docker
+
+✔ Implemented GitHub Actions CI/CD pipeline
+
+✔ Integrated Trivy vulnerability scanning into CI pipeline
+
+✔ Implemented GitOps deployment strategy using ArgoCD
+
+✔ Configured Kubernetes ConfigMaps, Secrets and Persistent Volumes
+
+✔ Implemented Horizontal Pod Autoscaler (HPA)
+
+✔ Automated image tag updates and deployments
+
+✔ Performed end-to-end troubleshooting of Docker, Kubernetes, ArgoCD and application issues
+
+✔ Successfully deployed and validated the application on Amazon EKS
+---
+
+# 📚 Key Learnings
+
+* Terraform Infrastructure as Code
+* Kubernetes Deployments and Services
+* Amazon EKS Administration
+* GitHub Actions CI/CD
+* GitOps with ArgoCD
+* Container Security using Trivy
+* Docker Image Optimization
+* Production Troubleshooting
+* Kubernetes Debugging
+* Cloud-Native Application Deployment
+
+---
+# 🎯 Interview Questions Covered
+
+### Terraform
+
+- Terraform Modules vs Workspaces
+- Terraform State Management
+- Remote State Backend
+- Module Reusability
+
+### Docker
+
+- Multi-Stage Builds
+- Docker Layer Caching
+- CMD vs ENTRYPOINT
+
+### Kubernetes
+
+- Deployment vs StatefulSet
+- ConfigMap vs Secret
+- PVC vs PV
+- Readiness vs Liveness Probe
+- HPA vs Cluster Autoscaler
+
+### AWS
+
+- EKS Architecture
+- ECR Image Management
+- IAM Roles for Service Accounts
+- VPC Design
+
+### GitOps
+
+- Why ArgoCD?
+- How Auto Sync Works
+- GitOps vs Traditional CI/CD
+
+### Security
+
+- Trivy Scanning
+- Vulnerability Management
+- Least Privilege IAM
+---
+# 🚀 Future Enhancements
+
+- AWS Application Load Balancer (ALB)
+- HTTPS using ACM Certificates
+- Prometheus Monitoring
+- Grafana Dashboards
+- Loki Log Aggregation
+- AWS Secrets Manager Integration
+- External Secrets Operator
+- Cluster Autoscaler
+- SonarQube Integration
+- Multi-Environment GitOps Promotion
+- Blue/Green Deployments
+- Canary Deployments
+---
+# 👨‍💻 Author
+
+## Dipak Kine
+
+DevOps Engineer
+
+### Skills
+
+AWS • Terraform • Docker • Kubernetes • GitHub Actions • ArgoCD • Linux • CI/CD • GitOps
+
+📧 kinedipak97@gmail.com
+
+📱 +91 7219367609
+
+🔗 GitHub: https://github.com/deepakkine
