@@ -12,3 +12,4 @@ resources:
   - app/configmap.yaml
   - app/service.yaml
   - app/deployment.yaml
+  - app/hpa.yaml
