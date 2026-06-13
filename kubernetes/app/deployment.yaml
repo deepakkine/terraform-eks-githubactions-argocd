@@ -20,7 +20,7 @@ spec:
       containers:
       - name: ecommerce-app
 
-        image: 848504403730.dkr.ecr.ap-south-1.amazonaws.com/ecommerce-app:v2
+        image: 848504403730.dkr.ecr.ap-south-1.amazonaws.com/ecommerce-app:v1
 
         imagePullPolicy: Always
 
