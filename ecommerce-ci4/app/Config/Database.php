@@ -26,10 +26,10 @@ class Database extends Config
      */
     public array $default = [
         'DSN'          => '',
-        'hostname'     => getenv('DB_HOST') ?: 'mysql',
-        'username'     => getenv('DB_USER') ?: 'root',
-        'password'     => getenv('DB_PASSWORD') ?: 'root',
-        'database'     => getenv('DB_NAME') ?: 'ecommerce',
+        'hostname'     => 'localhost',
+        'username'     => '',
+        'password'     => '',
+        'database'     => '',
         'DBDriver'     => 'MySQLi',
         'DBPrefix'     => '',
         'pConnect'     => false,
@@ -193,6 +193,12 @@ class Database extends Config
     public function __construct()
     {
         parent::__construct();
+
+        $this->default['hostname'] = getenv('DB_HOST') ?: 'mysql';
+        $this->default['username'] = getenv('DB_USER') ?: 'root';
+        $this->default['password'] = getenv('DB_PASSWORD') ?: 'root';
+        $this->default['database'] = getenv('DB_NAME') ?: 'ecommerce';
+
 
         // Ensure that we always set the database group to 'tests' if
         // we are currently running an automated test suite, so that
