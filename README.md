@@ -184,9 +184,9 @@ docker --version
 ## Clone Repository
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/terraform-eks-githubactions-argocd.git
+git clone https://github.com/deepakkine/aws-eks-gitops-devops-platform.git
 
-cd terraform-eks-githubactions-argocd
+cd aws-eks-gitops-devops-platform
 ```
 
 ---
